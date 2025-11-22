@@ -13,7 +13,8 @@
         fier 🦅</button> <button class="wbpup-choicebtn"
         data-animal="raccoon">Raton fou 🦝</button> <button
         class="wbpup-choicebtn" data-animal="panda">Panda sensei 🐼</button>
-    </div>
+      <button class="wbpup-choicebtn" data-animal="dragon">Dragon impérial
+        🐲</button></div>
   </div>
   <!-- Étape 2 : check-in -->
   <div id="wbpup-panel"
@@ -94,7 +95,7 @@
     100% { transform: translateY(0) scale(1); opacity: 1; }
   }
 
-  /* respiration / idle (sur le wrapper extérieur) */
+  /* respiration / idle (wrapper extérieur) */
   .wbpup-avatar-breath {
     display:inline-block;
     animation: wbpup-breath 4s ease-in-out infinite;
@@ -500,6 +501,131 @@
             ok: "Équilibre correct. Continue calmement.",
             meh: "Les jours flous existent. On avance doucement.",
             hard: "Même les maîtres traversent des tempêtes. Tu peux demander du soutien."
+          }
+        },
+
+        dragon: {
+          label: "Dragon impérial",
+          title: "Check-in 🐲",
+          avatarHTML: `
+        <div class="wbpup-avatar-breath">
+          <div class="wbpup-avatar-anim">
+            <div style="position:relative;width:80px;height:80px;margin:auto;">
+
+              <!-- moustaches / barbes -->
+              <div style="position:absolute;width:18px;height:4px;background:#fbbf24;
+                          border-radius:999px;top:40px;left:10px;"></div>
+              <div style="position:absolute;width:18px;height:4px;background:#fbbf24;
+                          border-radius:999px;top:40px;right:10px;"></div>
+
+              <!-- cornes dorées -->
+              <div style="position:absolute;width:14px;height:18px;background:#facc15;
+                          border-radius:50% 50% 0 0;top:4px;left:16px;
+                          transform:rotate(-18deg);"></div>
+              <div style="position:absolute;width:14px;height:18px;background:#facc15;
+                          border-radius:50% 50% 0 0;top:4px;right:16px;
+                          transform:rotate(18deg);"></div>
+
+              <!-- tête rouge -->
+              <div style="
+                position:absolute;
+                width:66px;height:46px;
+                background:#7f1d1d;
+                border-radius:20px;
+                top:18px;left:7px;
+                box-shadow:0 0 0 2px rgba(0,0,0,0.25);
+                z-index:5;
+              ">
+                <!-- front doré -->
+                <div style="position:absolute;left:14px;right:14px;top:6px;height:8px;
+                            background:linear-gradient(90deg,#f97316,#facc15);
+                            border-radius:999px;"></div>
+
+                <!-- yeux blancs -->
+                <div style="position:absolute;width:12px;height:12px;background:#f9fafb;
+                            border-radius:50%;top:18px;left:14px;"></div>
+                <div style="position:absolute;width:12px;height:12px;background:#f9fafb;
+                            border-radius:50%;top:18px;right:14px;"></div>
+
+                <!-- pupilles noires -->
+                <div style="position:absolute;width:7px;height:7px;background:#111;
+                            border-radius:50%;top:21px;left:17px;"></div>
+                <div style="position:absolute;width:7px;height:7px;background:#111;
+                            border-radius:50%;top:21px;right:17px;"></div>
+
+                <!-- pupilles rouge/or -->
+                <div style="position:absolute;width:4px;height:4px;background:#f97316;
+                            border-radius:50%;top:22px;left:19px;"></div>
+                <div style="position:absolute;width:4px;height:4px;background:#f97316;
+                            border-radius:50%;top:22px;right:19px;"></div>
+
+                <!-- paupières (blink) -->
+                <div class="wbpup-eye-blink"
+                     style="width:12px;left:14px;top:18px;"></div>
+                <div class="wbpup-eye-blink"
+                     style="width:12px;right:14px;top:18px;"></div>
+
+                <!-- museau / nez -->
+                <div style="position:absolute;width:20px;height:10px;background:#450a0a;
+                            border-radius:999px;bottom:8px;left:50%;
+                            transform:translateX(-50%);"></div>
+                <!-- narines -->
+                <div style="position:absolute;width:5px;height:5px;background:#111;
+                            border-radius:50%;bottom:9px;left:26px;"></div>
+                <div style="position:absolute;width:5px;height:5px;background:#111;
+                            border-radius:50%;bottom:9px;right:26px;"></div>
+              </div>
+
+              <!-- nuage ornement (sous la tête) -->
+              <div style="position:absolute;width:40px;height:8px;background:#e5e7eb;
+                          border-radius:999px;top:54px;left:20px;
+                          box-shadow:0 0 0 2px rgba(148,163,184,0.6);z-index:2;"></div>
+
+              <!-- corps serpenté -->
+              <div style="
+                position:absolute;
+                width:62px;height:32px;
+                background:linear-gradient(90deg,#7f1d1d,#f97316);
+                border-radius:999px;
+                bottom:10px;left:9px;
+                z-index:1;
+              ">
+                <!-- segments dorés -->
+                <div style="position:absolute;width:40px;height:16px;left:11px;top:8px;
+                            background:repeating-linear-gradient(
+                              90deg,
+                              rgba(251,191,36,0.85) 0 8px,
+                              rgba(248,250,252,0.0) 8px 12px
+                            );
+                            border-radius:999px;"></div>
+                <!-- pattes avant -->
+                <div style="position:absolute;width:10px;height:12px;background:#450a0a;
+                            border-radius:0 0 8px 8px;bottom:-4px;left:10px;"></div>
+                <div style="position:absolute;width:10px;height:12px;background:#450a0a;
+                            border-radius:0 0 8px 8px;bottom:-4px;right:10px;"></div>
+                <!-- queue en pointe -->
+                <div style="position:absolute;width:18px;height:8px;right:-10px;top:10px;
+                            background:#7f1d1d;border-radius:999px;"></div>
+                <div style="position:absolute;width:0;height:0;right:-14px;top:11px;
+                            border-top:6px solid transparent;
+                            border-bottom:6px solid transparent;
+                            border-left:10px solid #7f1d1d;"></div>
+              </div>
+            </div>
+          </div>
+        </div>`,
+          question: "Disciple, quelle est la flamme en toi aujourd’hui ? 🐲",
+          messagesDuJour: [
+            "La vraie puissance vient d’un cœur calme, pas d’un feu incontrôlé.",
+            "Même les dragons anciens se reposent entre deux batailles.",
+            "Prends soin de ton énergie, elle est ton trésor le plus précieux.",
+            "Un souffle profond peut apaiser plus de tempêtes que tu ne crois."
+          ],
+          moods: {
+            super: "Ta flamme intérieure brûle avec justesse 🔥 Garde en mémoire ce qui la nourrit.",
+            ok: "Équilibre honorable. Un petit moment pour toi renforcera ta force.",
+            meh: "Ta flamme est basse mais toujours là. Protége-la, n’en demande pas trop aujourd’hui.",
+            hard: "Même les dragons impériaux traversent la brume. Chercher du soutien, c’est digne d’un sage."
           }
         }
       };
