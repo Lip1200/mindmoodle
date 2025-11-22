@@ -50,20 +50,40 @@
         // Attempt to inject into window context for backend access
         window.MENTAL_HEALTH_COMPANION = companion;
         
-        // Listen for Chainlit ready event and inject companion
-        document.addEventListener('chainlit-ready', function() {
-            console.log('🔗 Chainlit ready, companion:', companion);
+        // Intercept WebSocket connection to inject companion metadata
+        const originalWebSocket = window.WebSocket;
+        window.WebSocket = function(url, protocols) {
+            console.log('🔌 WebSocket intercepted, injecting companion:', companion);
             
-            // Try to inject companion into session
-            if (window.Chainlit) {
-                try {
-                    // This will be accessible in the session metadata
-                    window.Chainlit.companion = companion;
-                } catch (e) {
-                    console.warn('Could not set Chainlit.companion:', e);
+            // Add companion as query parameter to WebSocket URL
+            const separator = url.includes('?') ? '&' : '?';
+            const modifiedUrl = url + separator + 'companion=' + encodeURIComponent(companion);
+            
+            const ws = new originalWebSocket(modifiedUrl, protocols);
+            
+            // Hook into send to inject companion in first message
+            const originalSend = ws.send.bind(ws);
+            let firstMessage = true;
+            ws.send = function(data) {
+                if (firstMessage) {
+                    try {
+                        const parsed = JSON.parse(data);
+                        if (!parsed.metadata) parsed.metadata = {};
+                        parsed.metadata.companion = companion;
+                        data = JSON.stringify(parsed);
+                        console.log('✅ Companion injected into first WS message');
+                    } catch (e) {
+                        console.warn('Could not parse WS message:', e);
+                    }
+                    firstMessage = false;
                 }
-            }
-        });
+                return originalSend(data);
+            };
+            
+            return ws;
+        };
+        
+        console.log('✅ Companion injection setup complete');
     }
     
     // Run on load

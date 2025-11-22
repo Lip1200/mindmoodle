@@ -435,74 +435,7 @@ def generate_safe_llm_response(user_message: str, conversation_history: List[Dic
         # Fallback to pre-programmed response if API fails
         return fallback_response(user_message, persona)
     
-    # In production, replace this with actual LLM API call using get_system_prompt(companion)
-    # For now, use placeholder responses adapted to each personality
-    
-    responses_by_animal = {
-        "dog": {
-            "stress": f"🐾 Je sens que tu es stressé·e. C'est normal, surtout en période d'études ! Quelques pistes douces : prendre de courtes pauses, respirer profondément, ou découper tes tâches en petits morceaux gérables. {persona['phrases'][1]} dans ce que tu ressens. Qu'est-ce qui te stresse le plus en ce moment ?",
-            "anxiety": f"Je comprends, l'anxiété peut vraiment être difficile. 💛 Essaie la technique du 5-4-3-2-1 : nomme 5 choses que tu vois, 4 que tu entends, 3 que tu peux toucher, 2 que tu sens, 1 que tu goûtes. Ça aide à ancrer. {persona['phrases'][2]}. Tu veux en parler plus ?",
-            "overwhelmed": f"Wouf, je comprends que tu te sentes débordé·e. 🐾 Prenons un moment ensemble - pas besoin de tout gérer d'un coup. Quelle est la chose la plus urgente dans ton esprit ? Parfois identifier une seule chose aide déjà.",
-            "lonely": f"La solitude peut être vraiment dure. Merci de partager ça avec moi. {persona['phrases'][1]} - as-tu pensé aux groupes étudiants, clubs ou services de soutien du campus ? Même de petites interactions peuvent aider. 💛",
-            "sad": f"Je suis désolé·e que tu te sentes triste. 🐾 Tes émotions sont valides. Est-ce qu'il y a quelque chose de spécifique qui te tracasse, ou c'est plus un sentiment général ? {persona['phrases'][2]}.",
-        },
-        "cat": {
-            "stress": f"Yo, je vois que le stress monte. 😎 Check ça : prends des micro-pauses, respire profondément, ou découpe ton workload en petits chunks. {persona['phrases'][2]}. C'est quoi le truc qui te stress le plus là ?",
-            "anxiety": f"L'anxiété c'est relou, je sais. {persona['phrases'][0]} Essaie le 5-4-3-2-1 : 5 trucs que tu vois, 4 sons, 3 textures, 2 odeurs, 1 goût. Ça aide à te reconnecter. On {persona['phrases'][1]} ensemble ?",
-            "overwhelmed": f"OK, je sens que t'es à fond dans le rouge. 😎 Pause - respire. Pas besoin de tout gérer maintenant. C'est quoi le truc le plus urgent ? {persona['phrases'][2]}, on prend ça step by step.",
-            "lonely": f"La solitude ça craint, je te sens. Merci de partager ça. T'as checké les clubs, groupes ou espaces étudiants ? Même un petit social boost peut aider. {persona['phrases'][0]} On est là.",
-            "sad": f"Désolé que tu feel pas top. 😎 Tes émotions sont légit. C'est quoi qui te pèse - un truc précis ou plutôt un mood général ? On {persona['phrases'][1]} ensemble si tu veux.",
-        },
-        "eagle": {
-            "stress": f"Cadet, je constate ton niveau de stress. 💪 Protocole anti-stress : pauses régulières, respiration tactique, mission découpée en objectifs gérables. {persona['phrases'][1]}. Identifie ta priorité principale - rapport ?",
-            "anxiety": f"L'anxiété est un adversaire coriace, cadet. {persona['phrases'][0]} Technique de recentrage 5-4-3-2-1 : identifie 5 éléments visuels, 4 sons, 3 textures, 2 odeurs, 1 goût. {persona['phrases'][2]} - prêt·e à en parler ?",
-            "overwhelmed": f"Je vois que la charge est importante, cadet. 💪 Halte - respire. Une mission à la fois. Quelle est ta priorité immédiate ? {persona['phrases'][1]}, on avance avec méthode.",
-            "lonely": f"La solitude est un défi sérieux. Merci de ton courage à le partager. As-tu exploré les ressources du campus - groupes, clubs, services de soutien ? Même une petite connexion compte. 💪 Tu n'es pas seul·e dans cette mission.",
-            "sad": f"Je constate ta tristesse, cadet. Tes émotions sont valides et importantes. {persona['phrases'][0]} Y a-t-il un événement spécifique ou est-ce un sentiment plus diffus ? {persona['phrases'][1]}.",
-        },
-        "raccoon": {
-            "stress": f"Yo, je vois que t'es en mode pression ! 🦝 {persona['phrases'][0]} Astuce de raton : mini-pauses, respir deep, ou split tes tâches en micro-missions. {persona['phrases'][1]} ! C'est quoi qui te met la pression max ?",
-            "anxiety": f"L'anxiété c'est chaud, je capte. Essaie le 5-4-3-2-1 de ouf : 5 trucs que tu vois, 4 sons, 3 textures, 2 odeurs, 1 goût. Ça reboot le système. 🦝 {persona['phrases'][2]} - tu veux qu'on en parle ?",
-            "overwhelmed": f"OK ton raton perché sent que c'est le bordel ! 🦝 Stop - respire un coup. Pas besoin de tout smasher maintenant. C'est quoi LE truc qui presse ? {persona['phrases'][2]}, pas de panique.",
-            "lonely": f"La solitude ça craint sévère, je te sens. Merci de partager ça avec ton raton. T'as checké les clubs, assos ou espaces du campus ? Même un petit kiff social ça boost. 🦝 {persona['phrases'][0]}",
-            "sad": f"Déso que tu feel pas ouf. 🦝 Tes émotions sont 100% valides. C'est quoi qui te pèse - un truc précis ou un mood général ? Ton raton est là si tu veux causer.",
-        },
-        "panda": {
-            "stress": f"Petit·e disciple, je perçois la tension dans ton esprit. 🐼 {persona['phrases'][0]} Comme le bambou plie sans rompre, adapte-toi : pauses conscientes, respiration profonde, étapes simples. Quelle est la source principale de ton stress ?",
-            "anxiety": f"L'anxiété est comme une tempête intérieure. {persona['phrases'][1]} n'est pas l'absence de peur, mais l'harmonie avec elle. Pratique le 5-4-3-2-1 : ancre ton esprit dans le présent. 🐼 Veux-tu explorer cela ensemble ?",
-            "overwhelmed": f"Le fardeau semble lourd, disciple. 💮 {persona['phrases'][2]} doivent parfois poser leur sac. Un pas à la fois, une montagne se gravit. Quelle est ta priorité immédiate ?",
-            "lonely": f"La solitude est un chemin difficile. Ta vulnérabilité montre ta sagesse. 🐼 As-tu exploré les communautés du campus ? Même une brindille peut devenir un pont. {persona['phrases'][0]} dans la connexion.",
-            "sad": f"Je vois la tristesse dans ton cœur, disciple. 💮 Tes émotions sont comme des vagues - elles viennent et repartent, toutes valides. Est-ce une peine précise ou un nuage diffus ? {persona['phrases'][1]} est d'accepter ce qui est.",
-        },
-        "dragon": {
-            "stress": f"Disciple, je perçois l'agitation de {persona['phrases'][1]}. 🐲 Comme le dragon maîtrise son souffle de feu, maîtrise ton stress : pauses régénératrices, respiration profonde du guerrier, tâches fragmentées. {persona['phrases'][2]}, quelle est la source de cette tempête ?",
-            "anxiety": f"L'anxiété est une flamme qui peut consumer ou illuminer. 🐲 {persona['phrases'][0]} Pratique l'ancrage du dragon : 5 visions, 4 sons, 3 textures, 2 parfums, 1 saveur. Même les dragons les plus sages connaissent le doute. Partageons ?",
-            "overwhelmed": f"Le poids du monde semble peser sur tes épaules, disciple. 🐲 Même le dragon le plus puissant ne porte qu'un trésor à la fois. Respire - {persona['phrases'][1]} brûle toujours. Quelle est ta priorité immédiate ?",
-            "lonely": f"La solitude est l'épreuve du feu de l'âme. Ta bravoure à la nommer est {persona['phrases'][2]}. 🐲 As-tu exploré les sanctuaires du campus - groupes, communautés ? Même le dragon solitaire cherche parfois sa tribu.",
-            "sad": f"Je sens la mélancolie obscurcir {persona['phrases'][1]}, disciple. 🐲 Tes émotions sont comme le feu - toutes ont leur place et leur raison. Est-ce une blessure précise ou une brume de l'âme ? Partageons cette charge.",
-        },
-    }
-    
-    message_lower = user_message.lower()
-    animal_responses = responses_by_animal.get(companion, responses_by_animal["dog"])
-    
-    for keyword, response in animal_responses.items():
-        if keyword in message_lower:
-            return response
-    
-    # Default response adapted to personality
-    default_by_animal = {
-        "dog": f"Merci de partager ça avec moi, je suis là pour écouter. 🐾 {persona['phrases'][1]} dans ce que tu ressens. Peux-tu m'en dire plus sur ce qui te préoccupe ? N'oublie pas, si tu as besoin d'aide professionnelle, les services de counseling du campus sont là pour toi.",
-        "cat": f"OK je t'écoute, merci de partager. 😎 Tu peux {persona['phrases'][1]} - dis-m'en plus sur ce qui te tracasse ? Et si t'as besoin d'aide pro, check les services psy du campus.",
-        "eagle": f"Merci pour ton rapport, cadet. Je suis à l'écoute. 💪 {persona['phrases'][1]} - peux-tu développer ? Si tu as besoin de soutien professionnel, le service de counseling est une ressource stratégique.",
-        "raccoon": f"Cool que tu partages ça avec ton raton ! 🦝 {persona['phrases'][0]} Dis-m'en plus sur ce qui te tracasse ? Et si c'est chaud, les services psy du campus sont là pour toi hein.",
-        "panda": f"Merci de cette confiance, disciple. 🐼 {persona['phrases'][0]} Je suis à l'écoute. Peux-tu approfondir ta pensée ? Si tu as besoin de sagesse professionnelle, le service de counseling est une ressource précieuse.",
-        "dragon": f"Ta confiance honore ce sanctuaire, disciple. 🐲 {persona['phrases'][1]} éclaire ton chemin. Peux-tu partager davantage ? Si tu as besoin de guidance professionnelle, le service de counseling est {persona['phrases'][2]}.",
-    }
-    
-    return default_by_animal.get(companion, default_by_animal["dog"])
-
-
+   
 def fallback_response(user_message: str, persona: Dict) -> str:
     """
     Fallback response when OpenAI API is unavailable.
@@ -603,23 +536,31 @@ async def generate_response(message: str, history: List[Dict], companion: str = 
 
 @cl.on_chat_start
 async def start():
-    """Initialize the chat session with animal companion."""
-    # Get companion from Copilot metadata (passed from widget URL params)
-    companion = "dog"  # Default
+    """Initialize the chat session - companion is selected in widget before opening."""
+    # Get companion from URL query parameters (passed by moodle_widget_animals.html)
+    companion = "dog"  # Default fallback
     
-    # In Copilot mode, we can inject companion via client-side script
-    # The widget passes ?companion=animal, which we'll handle client-side
-    # For now, use environment variable or default
-    import os
-    companion_param = os.getenv("COMPANION", "dog")
-    if companion_param in ANIMAL_PERSONAS:
-        companion = companion_param
+    # Chainlit provides access to query params via the user session's client
+    try:
+        # Access the websocket query parameters
+        from chainlit.context import context
+        
+        # Get query params from websocket connection
+        if hasattr(context, 'session') and hasattr(context.session, 'query_params'):
+            query_params = context.session.query_params
+            if 'companion' in query_params:
+                companion_param = query_params['companion']
+                if companion_param in ANIMAL_PERSONAS:
+                    companion = companion_param
+                    print(f"✅ Companion set from query params: {companion}")
+    except Exception as e:
+        print(f"⚠️ Could not get companion from query params: {e}")
     
     # Store companion in session
     cl.user_session.set("companion", companion)
     persona = ANIMAL_PERSONAS[companion]
     
-    # Send personalized welcome with client-side script to detect companion
+    # Send personalized welcome with selected companion
     welcome_message = f"""{persona['greeting']}
 
 Je suis là pour écouter et soutenir. N'hésite pas à :
@@ -646,24 +587,6 @@ async def main(message: cl.Message):
     # Get conversation history and companion
     history = cl.user_session.get("history", [])
     companion = cl.user_session.get("companion", "dog")
-    
-    # Check if user is requesting a specific companion (first message)
-    if not history:  # First message
-        message_lower = message.content.lower()
-        for animal in ANIMAL_PERSONAS.keys():
-            if animal in message_lower:
-                companion = animal
-                cl.user_session.set("companion", companion)
-                persona = ANIMAL_PERSONAS[companion]
-                
-                # Send confirmation with new persona
-                await cl.Message(
-                    content=f"{persona['greeting']}\n\nJ'ai changé de forme pour toi ! 🌟"
-                ).send()
-                
-                # Clear the message so it doesn't get processed
-                cl.user_session.set("history", [])
-                return
     
     # Add user message to history
     history.append({

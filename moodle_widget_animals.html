@@ -354,7 +354,7 @@ Widget avec choix de compagnon animal qui personnalise le chatbot.
     'use strict';
     
     // CONFIGURATION
-    const CHAINLIT_SERVER_URL = 'http://172.128.186.79:8000'; // Changez en production
+    const CHAINLIT_SERVER_URL = 'http://localhost:8000'; // Changez en production
     const STORAGE_KEY = 'mh_companion_animal';
     
     // Animal avatar HTML (from index.html)
@@ -579,6 +579,8 @@ Widget avec choix de compagnon animal qui personnalise le chatbot.
         // Build iframe URL with animal parameter
         const url = new URL(CHAINLIT_SERVER_URL);
         url.searchParams.set('companion', selectedAnimal);
+        
+        // Always reload iframe to get fresh session with new companion
         iframe.src = url.toString();
         
         // Update header with companion avatar
@@ -628,6 +630,12 @@ Widget avec choix de compagnon animal qui personnalise le chatbot.
     document.querySelectorAll('.mh-animal-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             const animal = btn.dataset.animal;
+            
+            // Si le chat est déjà ouvert avec un autre animal, le fermer d'abord
+            if (isChatOpen) {
+                closeChat();
+            }
+            
             updateButtonWithAnimal(animal);
             hideAnimalSelector();
             // Auto-open chat after selection
@@ -653,7 +661,7 @@ Widget avec choix de compagnon animal qui personnalise le chatbot.
     
     // Initialize
     initializeAvatars();
-    loadSavedAnimal();
+    // loadSavedAnimal(); // Désactivé pour forcer le choix à chaque fois
     
     // Remove pulse after 10 seconds
     setTimeout(() => {
