@@ -1,0 +1,4 @@
+chainlit>=1.0.0
+litellm>=1.0.0
+mellea>=0.2.0
+pytest>=7.0.0
