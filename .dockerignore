@@ -1,0 +1,53 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Documentation
+README.md
+EXAMPLES.md
+DEPLOYMENT.md
+SUMMARY.md
+MELLEA.md
+LICENSE
+
+# Test files
+test_*.py
+demo.py
+
+# Local development
+index.html
+moodle_widget.html
+moodle_widget_animals.html
+
+# Chainlit local data
+.chainlit/
+!.chainlit/config.toml
+
+# Build artifacts
+dist/
+build/
+*.egg-info/

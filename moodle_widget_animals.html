@@ -171,15 +171,71 @@ Widget avec choix de compagnon animal qui personnalise le chatbot.
 }
 
 #mh-chat-iframe-container.active {
-    display: block;
+    display: flex;
+    flex-direction: column;
     animation: slideUp 0.3s ease-out;
+}
+
+/* Chat header with companion avatar */
+#mh-chat-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 16px 16px 0 0;
+    flex-shrink: 0;
+}
+
+#mh-chat-header-avatar {
+    width: 40px;
+    height: 40px;
+    background: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+#mh-chat-header-avatar .wbpup-avatar-breath {
+    transform: scale(0.45);
+    transform-origin: center;
+}
+
+#mh-chat-header-title {
+    flex: 1;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+#mh-chat-header-close {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    transition: background 0.2s;
+    flex-shrink: 0;
+}
+
+#mh-chat-header-close:hover {
+    background: rgba(255, 255, 255, 0.3);
 }
 
 #mh-chat-iframe {
     width: 100%;
-    height: 100%;
+    flex: 1;
     border: none;
-    border-radius: 16px;
+    border-radius: 0 0 16px 16px;
 }
 
 /* Animal avatar badge on button */
@@ -209,6 +265,14 @@ Widget avec choix de compagnon animal qui personnalise le chatbot.
         height: 100%;
         max-width: 100%;
         max-height: 100%;
+        border-radius: 0;
+    }
+    
+    #mh-chat-header {
+        border-radius: 0;
+    }
+    
+    #mh-chat-iframe {
         border-radius: 0;
     }
     
@@ -272,6 +336,11 @@ Widget avec choix de compagnon animal qui personnalise le chatbot.
 
 <!-- Chat Iframe Container -->
 <div id="mh-chat-iframe-container">
+    <div id="mh-chat-header">
+        <div id="mh-chat-header-avatar"></div>
+        <div id="mh-chat-header-title">Compagnon bien-être</div>
+        <button id="mh-chat-header-close" aria-label="Fermer le chat">✕</button>
+    </div>
     <iframe 
         id="mh-chat-iframe"
         title="Mental Health Support Chat"
@@ -443,6 +512,16 @@ Widget avec choix de compagnon animal qui personnalise le chatbot.
         dragon: '🐲'
     };
     
+    // Animal names
+    const ANIMAL_NAMES = {
+        dog: 'Chien mignon',
+        cat: 'Chat cyberpunk',
+        eagle: 'Aigle fier',
+        raccoon: 'Raton laveur fou',
+        panda: 'Panda sensei',
+        dragon: 'Dragon impérial'
+    };
+    
     // DOM elements
     const chatButton = document.getElementById('mh-chat-button');
     const avatarBadge = document.getElementById('mh-avatar-badge');
@@ -450,6 +529,10 @@ Widget avec choix de compagnon animal qui personnalise le chatbot.
     const iframeContainer = document.getElementById('mh-chat-iframe-container');
     const iframe = document.getElementById('mh-chat-iframe');
     const closeSelector = document.getElementById('mh-close-selector');
+    const chatHeader = document.getElementById('mh-chat-header');
+    const chatHeaderAvatar = document.getElementById('mh-chat-header-avatar');
+    const chatHeaderTitle = document.getElementById('mh-chat-header-title');
+    const chatHeaderClose = document.getElementById('mh-chat-header-close');
     
     let selectedAnimal = null;
     let isChatOpen = false;
@@ -497,6 +580,10 @@ Widget avec choix de compagnon animal qui personnalise le chatbot.
         const url = new URL(CHAINLIT_SERVER_URL);
         url.searchParams.set('companion', selectedAnimal);
         iframe.src = url.toString();
+        
+        // Update header with companion avatar
+        chatHeaderAvatar.innerHTML = ANIMAL_AVATARS[selectedAnimal];
+        chatHeaderTitle.textContent = ANIMAL_NAMES[selectedAnimal];
         
         iframeContainer.classList.add('active');
         isChatOpen = true;
@@ -550,6 +637,9 @@ Widget avec choix de compagnon animal qui personnalise le chatbot.
     
     // Close selector button
     closeSelector.addEventListener('click', hideAnimalSelector);
+    
+    // Close chat from header button
+    chatHeaderClose.addEventListener('click', closeChat);
     
     // Inject animal avatars into buttons
     function initializeAvatars() {

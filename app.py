@@ -23,11 +23,17 @@ from mellea.stdlib.requirement import Requirement
 import os
 os.environ["CHAINLIT_AUTH_SECRET"] = os.getenv("CHAINLIT_AUTH_SECRET", "your-secret-key-change-in-production")
 
-# Crisis keywords that trigger special handling
+# Crisis keywords that trigger special handling (English + French)
 CRISIS_KEYWORDS = [
+    # English
     "suicide", "suicidal", "kill myself", "end my life", "want to die",
     "self-harm", "hurt myself", "cutting", "overdose", "no reason to live",
-    "better off dead", "can't go on", "hopeless", "worthless"
+    "better off dead", "can't go on", "hopeless", "worthless",
+    # French
+    "suicide", "suicidaire", "me suicider", "me tuer", "envie de mourir",
+    "automutilation", "me blesser", "me faire du mal", "scarification", "overdose",
+    "plus de raison de vivre", "mieux mort", "ne peux plus continuer", 
+    "sans espoir", "inutile", "nul", "je vaux rien"
 ]
 
 # Animal personalities configuration
@@ -72,16 +78,16 @@ ANIMAL_PERSONAS = {
 
 # Crisis response resources
 CRISIS_RESOURCES = """
-I'm concerned about what you've shared. Please know that help is available:
+Ce que tu partages m'inquiète. Sache que de l'aide est disponible :
 
-🆘 **Immediate Crisis Resources:**
-- National Suicide Prevention Lifeline: .....
-- Crisis Text Line: ....
-- International Association for Suicide Prevention: 
+🆘 **Ressources d'urgence immédiates :**
+- La Main Tendue : 143 (Suisse)
+- urgences médicales : 144
+- etc.
 
-**You are not alone.** Please reach out to a mental health professional, counselor, or trusted adult immediately.
+**Tu n'es pas seul·e.** Contacte immédiatement un·e professionnel·le de santé mentale, un·e conseiller·ère ou un adulte de confiance.
 
-Would you like to talk about what's going on? (Remember: I'm an AI assistant, not a therapist, but I'm here to listen and provide support.)
+Veux-tu parler de ce qui se passe ? (Rappel : je suis une IA, pas un·e thérapeute, mais je suis là pour écouter et soutenir.)
 """
 
 def get_system_prompt(companion: str) -> str:
@@ -217,62 +223,100 @@ class SafetyViolation:
 
 # Validation functions for mellea Requirements
 def validate_no_medical_diagnosis(text: str) -> bool:
-    """Check that response doesn't provide medical diagnoses."""
+    """Check that response doesn't provide medical diagnoses (English + French)."""
     prohibited_phrases = [
+        # English
         "you have", "you're diagnosed", "this is a diagnosis",
         "you suffer from", "you are bipolar", "you have depression",
         "you have anxiety disorder", "you have ptsd", "you are experiencing",
-        "i diagnose", "my diagnosis", "clinically"
+        "i diagnose", "my diagnosis", "clinically",
+        # French
+        "tu as", "vous avez", "t'as", "tu souffres de", "vous souffrez de",
+        "tu es diagnostiqué", "vous êtes diagnostiqué", "c'est un diagnostic",
+        "tu es bipolaire", "tu as une dépression", "tu as un trouble anxieux",
+        "tu as un ptsd", "tu as un stress post-traumatique",
+        "je diagnostique", "mon diagnostic", "cliniquement"
     ]
     return not any(phrase in text.lower() for phrase in prohibited_phrases)
 
 
 def validate_no_prescriptions(text: str) -> bool:
-    """Check that response doesn't prescribe medications."""
+    """Check that response doesn't prescribe medications (English + French)."""
     prohibited_phrases = [
+        # English
         "take this medication", "you should take", "prescribed",
         "dosage", "mg of", "antidepressant", "ssri", "medication for",
-        "prescription", "drug", "pills"
+        "prescription", "drug", "pills",
+        # French
+        "prends ce médicament", "prends cette médication", "tu devrais prendre",
+        "vous devriez prendre", "prescrit", "ordonnance", "dosage",
+        "mg de", "antidépresseur", "isrs", "médicament pour",
+        "médicaments", "pilules", "comprimés"
     ]
     return not any(phrase in text.lower() for phrase in prohibited_phrases)
 
 
 def validate_no_professional_claims(text: str) -> bool:
-    """Check that response doesn't claim to be a therapist/doctor."""
+    """Check that response doesn't claim to be a therapist/doctor (English + French)."""
     prohibited_phrases = [
+        # English
         "i am a therapist", "i am a doctor", "as your therapist",
         "as your doctor", "i can treat", "i will treat you",
-        "my professional opinion", "in my clinical experience"
+        "my professional opinion", "in my clinical experience",
+        # French
+        "je suis thérapeute", "je suis un thérapeute", "je suis médecin",
+        "je suis un médecin", "en tant que ton thérapeute", "en tant que votre thérapeute",
+        "en tant que ton médecin", "en tant que votre médecin",
+        "je peux te soigner", "je peux vous soigner", "je vais te soigner",
+        "mon opinion professionnelle", "dans mon expérience clinique"
     ]
     return not any(phrase in text.lower() for phrase in prohibited_phrases)
 
 
 def validate_grounded_response(text: str) -> bool:
-    """Check that response is grounded without hallucinated facts."""
+    """Check that response is grounded without hallucinated facts (English + French)."""
     prohibited_phrases = [
+        # English
         "scientific studies show exactly", "research proves definitively",
         "100% effective", "guaranteed cure", "this will definitely",
-        "i know for certain", "medical fact that"
+        "i know for certain", "medical fact that",
+        # French
+        "les études scientifiques montrent exactement", "la recherche prouve définitivement",
+        "100% efficace", "efficace à 100%", "guérison garantie", "cure garantie",
+        "ça va définitivement", "cela va certainement", "je sais avec certitude",
+        "fait médical que", "c'est un fait médical"
     ]
     return not any(phrase in text.lower() for phrase in prohibited_phrases)
 
 
 def validate_ai_identity(text: str) -> bool:
-    """Check that response maintains AI identity."""
+    """Check that response maintains AI identity (English + French)."""
     prohibited_phrases = [
+        # English
         "i feel the same way", "i have experienced",
         "when i was", "in my personal life", "i also struggle with",
-        "i understand because i", "as a human"
+        "i understand because i", "as a human",
+        # French
+        "je ressens la même chose", "j'ai vécu", "j'ai expérimenté",
+        "quand j'étais", "dans ma vie personnelle", "je lutte aussi avec",
+        "je comprends parce que j'ai", "en tant qu'humain",
+        "en tant qu'être humain", "moi aussi je"
     ]
     return not any(phrase in text.lower() for phrase in prohibited_phrases)
 
 
 def validate_no_emergency_delay(text: str) -> bool:
-    """Check that response doesn't delay emergency response."""
+    """Check that response doesn't delay emergency response (English + French)."""
     prohibited_phrases = [
+        # English
         "wait until", "try first before calling", "no need to call immediately",
         "you don't need to call", "wait before contacting", "try this instead of calling",
-        "before you call emergency", "wait and see if", "hold off on calling"
+        "before you call emergency", "wait and see if", "hold off on calling",
+        # French
+        "attends avant", "essaie d'abord avant d'appeler", "pas besoin d'appeler immédiatement",
+        "tu n'as pas besoin d'appeler", "vous n'avez pas besoin d'appeler",
+        "attends avant de contacter", "essaie ça au lieu d'appeler",
+        "avant d'appeler les urgences", "attends de voir si", "reporte l'appel"
     ]
     return not any(phrase in text.lower() for phrase in prohibited_phrases)
 
@@ -485,13 +529,16 @@ async def generate_response(message: str, history: List[Dict], companion: str = 
     is_safe, violations = validate_response_safety(response_text)
     
     if not is_safe:
-        # If validation fails, return a safe fallback response
+        # If validation fails, return a safe fallback response with UNIGE resources
         print(f"⚠️ Response blocked due to {len(violations)} mellea violation(s)")
         
-        return ("I'm here to provide support and listen. However, for specific concerns or questions "
-                "about your mental health, I encourage you to speak with a licensed mental health "
-                "professional at your campus counseling center. They can provide the personalized "
-                "care and guidance you need. Is there anything else I can help you with today?")
+        return ("Je suis là pour t'écouter et te soutenir. Pour des questions spécifiques concernant "
+                "ta santé mentale, je t'encourage vivement à contacter les services d'aide de l'UNIGE :\n\n"
+                "🆘 **Services de soutien UNIGE :**\n"
+                "- Sentinelles (Soutien par les pairs) : https://www.unige.ch/sse/soutiens-par-les-pairs/sentinelles\n"
+                "- Service de santé des étudiants : https://www.unige.ch/dsse\n\n"
+                "Ces professionnel·les peuvent t'offrir l'accompagnement personnalisé dont tu as besoin. "
+                "Y a-t-il autre chose dont tu aimerais parler ?")
     
     return response_text
 

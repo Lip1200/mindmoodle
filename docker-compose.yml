@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  mindmoodle:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mindmoodle-chatbot
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      # Chainlit configuration
+      - CHAINLIT_AUTH_SECRET=${CHAINLIT_AUTH_SECRET:-change-this-secret-in-production}
+      - CHAINLIT_URL=${CHAINLIT_URL:-http://localhost:8000}
+      
+      # LLM configuration (add your API keys here)
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      
+      # Default companion
+      - COMPANION=${COMPANION:-dog}
+      
+      # Production mode
+      - CHAINLIT_TELEMETRY=false
+      - PYTHONUNBUFFERED=1
+    
+    volumes:
+      # Persist Chainlit data (optional)
+      - chainlit-data:/app/.chainlit/data
+    
+    networks:
+      - mindmoodle-network
+    
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    
+    labels:
+      - "com.mindmoodle.description=Mental Health Support Chatbot for Moodle"
+      - "com.mindmoodle.version=1.0.0"
+
+volumes:
+  chainlit-data:
+    driver: local
+
+networks:
+  mindmoodle-network:
+    driver: bridge
