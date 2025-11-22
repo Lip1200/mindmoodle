@@ -1,0 +1,593 @@
+<!-- Compagnon bien-être - choix d’animal + check-in -->
+<div id="wbpup-container"
+  style="text-align: center; padding: 20px; max-width: 380px; margin: auto;">
+  <!-- Zone avatar -->
+  <div id="wbpup-avatarzone" style="margin-bottom: 15px;"></div>
+  <!-- Étape 1 : choix d’animal -->
+  <div id="wbpup-choice" style="margin-bottom: 15px;">
+    <p style="margin-bottom: 8px; font-weight: 600;">Choisis ton compagnon :</p>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+      <button class="wbpup-choicebtn" data-animal="dog">Chien mignon 🐶</button>
+      <button class="wbpup-choicebtn" data-animal="cat">Chat cyberpunk
+        😼</button> <button class="wbpup-choicebtn" data-animal="eagle">Aigle
+        fier 🦅</button> <button class="wbpup-choicebtn"
+        data-animal="raccoon">Raton fou 🦝</button> <button
+        class="wbpup-choicebtn" data-animal="panda">Panda sensei 🐼</button>
+    </div>
+  </div>
+  <!-- Étape 2 : check-in -->
+  <div id="wbpup-panel"
+    style="display: none; background: #fff; padding: 15px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: left;">
+    <div
+      style="display: flex; justify-content: space-between; align-items: center;">
+      <strong id="wbpup-title">Check-in bien-être</strong>
+      <!-- bouton pour changer d’animal --> <button id="wbpup-change"
+        style="border: none; background: none; font-size: 11px; color: #2563eb; cursor: pointer; text-decoration: underline; padding: 0;">
+        Changer de compagnon </button></div>
+    <!-- Message du jour -->
+    <p id="wbpup-motdujour"
+      style="margin-top: 8px; font-size: 13px; color: #444; font-style: italic;">
+    </p>
+    <p id="wbpup-question" style="margin-top: 12px;">Salut 👋 Comment te sens-tu
+      aujourd’hui ?</p>
+    <div id="wbpup-buttons"
+      style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px;">
+      <button data-mood="super">Super 😊</button> <button data-mood="ok">Ça va
+        😌</button> <button data-mood="meh">Bof 😕</button> <button
+        data-mood="hard">En difficulté 😣</button></div>
+    <p id="wbpup-feedback"
+      style="display: none; margin-top: 12px; background: #eef2ff; padding: 10px; border-radius: 8px;">
+    </p>
+    <p style="font-size: 11px; margin-top: 10px; color: #666;">Ton compagnon
+      n’est pas un·e professionnel·le 💬<br>En cas de détresse, contacte une
+      ligne d’écoute ou un service d’urgence.</p>
+  </div>
+</div>
+<p>
+  <script>
+    (function() {
+      const STORAGE_KEY = "wbpupAnimalChoice";
+
+      /* --- CSS injecté pour styles & animations --- */
+      const css = `
+  .wbpup-choicebtn {
+    border-radius: 999px;
+    border: 1px solid #e5e7eb;
+    background: #f9fafb;
+    cursor: pointer;
+    padding: 6px 8px;
+    font-size: 13px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.08s ease;
+  }
+  .wbpup-choicebtn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+    background: #f1f5f9;
+  }
+
+  #wbpup-buttons button {
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    background: #f9fafb;
+    padding: 8px 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.08s ease;
+  }
+  #wbpup-buttons button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+    background: #f1f5f9;
+  }
+
+  /* intro (bounce) */
+  .wbpup-avatar-anim {
+    animation: wbpup-intro 900ms ease-out;
+  }
+  @keyframes wbpup-intro {
+    0%   { transform: translateY(20px) scale(0.7); opacity: 0; }
+    60%  { transform: translateY(-6px) scale(1.05); opacity: 1; }
+    100% { transform: translateY(0) scale(1); opacity: 1; }
+  }
+
+  /* respiration / idle (sur le wrapper extérieur) */
+  .wbpup-avatar-breath {
+    display:inline-block;
+    animation: wbpup-breath 4s ease-in-out infinite;
+  }
+  @keyframes wbpup-breath {
+    0%,100% { transform: translateY(0) scale(1); }
+    50%     { transform: translateY(-2px) scale(1.03); }
+  }
+
+  /* avatar neutre */
+  .wbpup-avatar-circle {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    margin: auto;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:32px;
+    background:#f3f4f6;
+    color:#9ca3af;
+  }
+
+  /* clignement des yeux (blink) */
+  .wbpup-eye-blink {
+    position:absolute;
+    height:0;
+    background:#111827;
+    border-radius:999px;
+    animation: wbpup-blink 4s infinite;
+    transform-origin: top;
+  }
+  @keyframes wbpup-blink {
+    0%, 92%, 100% { height:0; }
+    94%, 96%      { height:8px; }
+  }
+  `;
+
+      const styleTag = document.createElement("style");
+      styleTag.type = "text/css";
+      styleTag.appendChild(document.createTextNode(css));
+      document.head.appendChild(styleTag);
+
+      /* --- Config des animaux (HTML/CSS pour chaque avatar) --- */
+      const animals = {
+        dog: {
+          label: "Chien mignon",
+          title: "Check-in 🐶",
+          avatarHTML: `
+        <div class="wbpup-avatar-breath">
+          <div class="wbpup-avatar-anim">
+            <div style="position:relative;width:80px;height:80px;margin:auto;">
+              <!-- oreilles -->
+              <div style="position:absolute;width:26px;height:30px;background:#b56539;
+                          border-radius:50% 50% 40% 40%;top:0;left:4px;"></div>
+              <div style="position:absolute;width:26px;height:30px;background:#b56539;
+                          border-radius:50% 50% 40% 40%;top:0;right:4px;"></div>
+              <!-- tête -->
+              <div style="position:absolute;width:70px;height:55px;background:#f5e9dd;
+                          border-radius:50px;top:15px;left:5px;z-index:5;">
+                <div style="position:absolute;width:28px;height:28px;background:#e0c5aa;
+                            border-radius:50%;left:6px;top:10px;"></div>
+                <!-- yeux -->
+                <div style="position:absolute;width:10px;height:10px;background:#111;
+                            border-radius:50%;top:20px;left:22px;"></div>
+                <div style="position:absolute;width:10px;height:10px;background:#111;
+                            border-radius:50%;top:20px;right:18px;"></div>
+                <!-- paupières animées -->
+                <div class="wbpup-eye-blink"
+                     style="width:10px;left:22px;top:20px;"></div>
+                <div class="wbpup-eye-blink"
+                     style="width:10px;right:18px;top:20px;"></div>
+                <!-- museau -->
+                <div style="position:absolute;width:34px;height:24px;background:#fff;
+                            border-radius:50px;bottom:0;left:50%;
+                            transform:translateX(-50%);">
+                  <div style="position:absolute;width:14px;height:10px;background:#111;
+                              border-radius:70%;top:2px;left:50%;
+                              transform:translateX(-50%);"></div>
+                </div>
+              </div>
+              <!-- corps -->
+              <div style="position:absolute;width:60px;height:36px;background:#f5e9dd;
+                          border-radius:30px;bottom:0;left:10px;z-index:1;">
+                <div style="position:absolute;width:14px;height:14px;background:#f5e9dd;
+                            border-radius:50%;bottom:-5px;left:10px;"></div>
+                <div style="position:absolute;width:14px;height:14px;background:#f5e9dd;
+                            border-radius:50%;bottom:-5px;right:10px;"></div>
+              </div>
+            </div>
+          </div>
+        </div>`,
+          question: "Coucou 🐶 Comment tu te sens aujourd’hui ?",
+          messagesDuJour: [
+            "Tu as le droit d’être doux·ce avec toi-même aujourd’hui 💛",
+            "Un pas après l’autre, je reste avec toi 🐾",
+            "Tu n’es pas seul·e : demander de l’aide, c’est courageux.",
+            "Tu peux être fatigué·e et quand même digne de bienveillance."
+          ],
+          moods: {
+            super: "Wouf ! Trop bien 🎉 Note une petite victoire du jour, même minuscule.",
+            ok: "Merci d’avoir checké 😌 Une mini pause et un verre d’eau ?",
+            meh: "Les jours bof existent… Tu as le droit de ralentir un peu.",
+            hard: "Merci d’avoir osé le dire 💛 Tu mérites du soutien, vraiment."
+          }
+        },
+
+        cat: {
+          label: "Chat cyberpunk",
+          title: "Check-in 😼",
+          avatarHTML: `
+        <div class="wbpup-avatar-breath">
+          <div class="wbpup-avatar-anim">
+            <div style="position:relative;width:80px;height:80px;margin:auto;">
+              <!-- oreilles triangles -->
+              <div style="position:absolute;width:0;height:0;
+                          border-left:10px solid transparent;
+                          border-right:10px solid transparent;
+                          border-bottom:18px solid #4b5563;
+                          top:4px;left:16px;"></div>
+              <div style="position:absolute;width:0;height:0;
+                          border-left:10px solid transparent;
+                          border-right:10px solid transparent;
+                          border-bottom:18px solid #4b5563;
+                          top:4px;right:16px;"></div>
+              <!-- tête -->
+              <div style="position:absolute;width:64px;height:50px;background:#111827;
+                          border-radius:18px;top:16px;left:8px;
+                          box-shadow:0 0 0 2px #22c1c3;z-index:5;">
+                <!-- visière neon -->
+                <div style="position:absolute;left:6px;right:6px;top:20px;height:12px;
+                            background:linear-gradient(90deg,#22c1c3,#a855f7);
+                            border-radius:8px;"></div>
+                <!-- yeux (points de lumière) -->
+                <div style="position:absolute;width:8px;height:8px;background:#ecfeff;
+                            border-radius:2px;top:22px;left:12px;"></div>
+                <div style="position:absolute;width:8px;height:8px;background:#ecfeff;
+                            border-radius:2px;top:22px;right:12px;"></div>
+                <!-- paupières (blink) -->
+                <div class="wbpup-eye-blink"
+                     style="width:8px;left:12px;top:22px;"></div>
+                <div class="wbpup-eye-blink"
+                     style="width:8px;right:12px;top:22px;"></div>
+                <!-- museau -->
+                <div style="position:absolute;width:16px;height:10px;background:#f9fafb;
+                            border-radius:10px;bottom:4px;left:50%;
+                            transform:translateX(-50%);"></div>
+              </div>
+              <!-- corps -->
+              <div style="position:absolute;width:56px;height:30px;background:#111827;
+                          border-radius:18px;bottom:6px;left:12px;z-index:1;">
+                <div style="position:absolute;left:10px;bottom:-4px;width:10px;height:12px;
+                            background:#111827;border-radius:0 0 8px 8px;"></div>
+                <div style="position:absolute;right:10px;bottom:-4px;width:10px;height:12px;
+                            background:#111827;border-radius:0 0 8px 8px;"></div>
+                <!-- queue neon -->
+                <div style="position:absolute;right:-10px;top:6px;width:22px;height:8px;
+                            background:linear-gradient(90deg,#22c1c3,#a855f7);
+                            border-radius:999px;"></div>
+              </div>
+            </div>
+          </div>
+        </div>`,
+          question: "Yo. 😼 On fait un check rapide de ton mood ?",
+          messagesDuJour: [
+            "Rester chill n’empêche pas d’être efficace. On optimise ton énergie, pas ta perfection.",
+            "Mode cyber-chill : on fait ce qu’on peut, pas ce qu’on “devrait” absolument faire.",
+            "Tu peux être fatigué·e ET compétent·e. Les deux existent en même temps.",
+            "Ton niveau d’énergie n’est pas ta valeur. On respire, on ajuste."
+          ],
+          moods: {
+            super: "Stylé 🔥 On garde ce flow. Note ce qui t’a donné cette énergie.",
+            ok: "OK, mood stable 😎 Pense à un truc qui te ferait +1% mieux.",
+            meh: "Meh accepté. On fait le minimum viable aujourd’hui, et c’est déjà bien.",
+            hard: "Dur… Je valide totalement. Pause, musique, lumière douce : on passe en mode survie cool."
+          }
+        },
+
+        eagle: {
+          label: "Aigle fier",
+          title: "Check-in 🦅",
+          avatarHTML: `
+        <div class="wbpup-avatar-breath">
+          <div class="wbpup-avatar-anim">
+            <div style="position:relative;width:80px;height:80px;margin:auto;">
+              <!-- tête blanche -->
+              <div style="
+                position:absolute;
+                width:54px;height:40px;
+                background:#f9fafb;
+                border-radius:40px;
+                top:18px;left:13px;
+                box-shadow:0 0 0 2px rgba(0,0,0,0.08);
+                z-index:5;
+              ">
+                <!-- bec -->
+                <div style="position:absolute;width:0;height:0;
+                            border-top:8px solid transparent;
+                            border-bottom:8px solid transparent;
+                            border-left:14px solid #fbbf24;
+                            right:-10px;top:18px;"></div>
+                <!-- yeux -->
+                <div style="position:absolute;width:8px;height:8px;background:#111;
+                            border-radius:50%;top:14px;left:14px;"></div>
+                <div style="position:absolute;width:8px;height:8px;background:#111;
+                            border-radius:50%;top:14px;right:14px;"></div>
+                <!-- paupières -->
+                <div class="wbpup-eye-blink"
+                     style="width:8px;left:14px;top:14px;"></div>
+                <div class="wbpup-eye-blink"
+                     style="width:8px;right:14px;top:14px;"></div>
+              </div>
+              <!-- corps brun -->
+              <div style="
+                position:absolute;
+                width:52px;height:34px;
+                background:#78350f;
+                border-radius:26px;
+                bottom:8px;left:14px;
+                z-index:1;
+              ">
+                <div style="position:absolute;width:16px;height:14px;background:#92400e;
+                            border-radius:50%;bottom:-4px;left:10px;"></div>
+                <div style="position:absolute;width:16px;height:14px;background:#92400e;
+                            border-radius:50%;bottom:-4px;right:10px;"></div>
+              </div>
+            </div>
+          </div>
+        </div>`,
+          question: "Cadet, statut de mission ? 🦅",
+          messagesDuJour: [
+            "Tu as déjà surmonté 100% de tes pires journées.",
+            "Même les aigles se reposent avant de remonter plus haut.",
+            "La discipline, c’est aussi respecter son énergie.",
+            "Petit effort + petit effort = gros progrès."
+          ],
+          moods: {
+            super: "Exécution parfaite soldat 💪",
+            ok: "Status opérationnel.",
+            meh: "Vent contraire. Garde le cap.",
+            hard: "Zone de turbulence : ralentis et demande renfort si besoin."
+          }
+        },
+
+        raccoon: {
+          label: "Raton laveur fou",
+          title: "Check-in 🦝",
+          avatarHTML: `
+        <div class="wbpup-avatar-breath">
+          <div class="wbpup-avatar-anim">
+            <div style="position:relative;width:80px;height:80px;margin:auto;">
+
+              <!-- tête -->
+              <div style="
+                position:absolute;
+                width:64px;height:46px;
+                background:#6b7280;
+                border-radius:18px;
+                top:18px;left:8px;
+                z-index:5;
+              ">
+                <!-- masque -->
+                <div style="position:absolute;left:4px;right:4px;top:16px;height:16px;
+                            background:#111827;border-radius:12px;"></div>
+                <!-- yeux -->
+                <div style="position:absolute;width:10px;height:10px;background:#f9fafb;
+                            border-radius:50%;top:18px;left:14px;"></div>
+                <div style="position:absolute;width:10px;height:10px;background:#f9fafb;
+                            border-radius:50%;top:18px;right:14px;"></div>
+                <!-- paupières -->
+                <div class="wbpup-eye-blink"
+                     style="width:10px;left:14px;top:18px;"></div>
+                <div class="wbpup-eye-blink"
+                     style="width:10px;right:14px;top:18px;"></div>
+                <!-- nez -->
+                <div style="position:absolute;width:10px;height:8px;background:#111827;
+                            border-radius:70%;bottom:4px;left:50%;
+                            transform:translateX(-50%);"></div>
+              </div>
+
+              <!-- oreilles -->
+              <div style="position:absolute;width:20px;height:20px;background:#4b5563;
+                          border-radius:6px 6px 0 0;top:6px;left:8px;z-index:6;"></div>
+              <div style="position:absolute;width:20px;height:20px;background:#4b5563;
+                          border-radius:6px 6px 0 0;top:6px;right:8px;z-index:6;"></div>
+
+              <!-- corps -->
+              <div style="
+                position:absolute;
+                width:58px;height:32px;
+                background:#6b7280;
+                border-radius:22px;
+                bottom:8px;left:11px;
+                z-index:1;
+              ">
+                <div style="position:absolute;width:14px;height:14px;background:#6b7280;
+                            border-radius:50%;bottom:-4px;left:10px;"></div>
+                <div style="position:absolute;width:14px;height:14px;background:#6b7280;
+                            border-radius:50%;bottom:-4px;right:10px;"></div>
+                <!-- queue rayée -->
+                <div style="position:absolute;width:26px;height:10px;right:-14px;top:8px;
+                            background:repeating-linear-gradient(90deg,#4b5563 0 6px,#9ca3af 6px 12px);
+                            border-radius:999px;"></div>
+              </div>
+            </div>
+          </div>
+        </div>`,
+          question: "Yo, c’est ton raton laveur un peu perché 🦝 C’est quoi ton mood là ?",
+          messagesDuJour: [
+            "Petit rappel : t’es déjà en train de gérer plus de trucs que tu crois.",
+            "Boire de l’eau et souffler 30 secondes, c’est pas nul : c’est du self-care de ninja.",
+            "Tu peux être en vrac et quand même être une super personne, true story.",
+            "On avance à la sauce raton : parfois ça roule, parfois c’est freestyle, mais on avance."
+          ],
+          moods: {
+            super: "T’es en full légende là 🔥 Garde en tête ce qui t’a boosté aujourd’hui.",
+            ok: "Ok chill, ça roule 😌 Fais-toi un mini kiff genre snack, musique ou pause.",
+            meh: "Mood patate molle ? Aucun souci, on fait en mode petite vitesse, c’est validé.",
+            hard: "Ouf, journée compliquée… Franchement respect d’être encore là. Parle à quelqu’un si ça déborde, t’es pas obligé·e de tout garder."
+          }
+        },
+
+        panda: {
+          label: "Panda sensei",
+          title: "Check-in 🐼",
+          avatarHTML: `
+        <div class="wbpup-avatar-breath">
+          <div class="wbpup-avatar-anim">
+            <div style="position:relative;width:80px;height:80px;margin:auto;">
+
+              <!-- tête -->
+              <div style="
+                position:absolute;
+                width:64px;height:50px;
+                background:#f9fafb;
+                border-radius:26px;
+                top:16px;left:8px;
+                box-shadow:0 0 0 2px rgba(0,0,0,0.05);
+                z-index:5;
+              ">
+                <!-- taches yeux -->
+                <div style="position:absolute;width:14px;height:16px;background:#111827;
+                            border-radius:50%;top:18px;left:13px;"></div>
+                <div style="position:absolute;width:14px;height:16px;background:#111827;
+                            border-radius:50%;top:18px;right:13px;"></div>
+                <!-- yeux -->
+                <div style="position:absolute;width:6px;height:6px;background:#f9fafb;
+                            border-radius:50%;top:22px;left:18px;"></div>
+                <div style="position:absolute;width:6px;height:6px;background:#f9fafb;
+                            border-radius:50%;top:22px;right:18px;"></div>
+                <!-- paupières -->
+                <div class="wbpup-eye-blink"
+                     style="width:6px;left:18px;top:22px;"></div>
+                <div class="wbpup-eye-blink"
+                     style="width:6px;right:18px;top:22px;"></div>
+                <!-- nez -->
+                <div style="position:absolute;width:10px;height:8px;background:#111827;
+                            border-radius:70%;bottom:6px;left:50%;
+                            transform:translateX(-50%);"></div>
+              </div>
+
+              <!-- oreilles -->
+              <div style="position:absolute;width:22px;height:22px;background:#111827;
+                          border-radius:50%;top:4px;left:10px;z-index:6;"></div>
+              <div style="position:absolute;width:22px;height:22px;background:#111827;
+                          border-radius:50%;top:4px;right:10px;z-index:6;"></div>
+
+              <!-- corps + cravate -->
+              <div style="
+                position:absolute;
+                width:56px;height:34px;
+                background:#111827;
+                border-radius:26px;
+                bottom:8px;left:12px;
+                z-index:1;
+              ">
+                <!-- cravate noeud -->
+                <div style="position:absolute;width:12px;height:8px;background:#7f1d1d;
+                            top:4px;left:50%;transform:translateX(-50%);
+                            border-radius:4px;"></div>
+                <!-- cravate -->
+                <div style="position:absolute;width:12px;height:18px;background:#b91c1c;
+                            top:12px;left:50%;transform:translateX(-50%);
+                            border-radius:2px 2px 6px 6px;"></div>
+                <!-- pattes -->
+                <div style="position:absolute;width:14px;height:14px;background:#111827;
+                            border-radius:50%;bottom:-4px;left:10px;"></div>
+                <div style="position:absolute;width:14px;height:14px;background:#111827;
+                            border-radius:50%;bottom:-4px;right:10px;"></div>
+              </div>
+            </div>
+          </div>
+        </div>`,
+          question: "Petit·e disciple 🐼, comment va ton énergie aujourd’hui ?",
+          messagesDuJour: [
+            "Même les maîtres se reposent.",
+            "La vraie force, c’est d’écouter son énergie.",
+            "Un petit pas vaut mieux qu’un grand épuisement.",
+            "La discipline inclut le repos."
+          ],
+          moods: {
+            super: "Forme légendaire, jeune maître 💮",
+            ok: "Équilibre correct. Continue calmement.",
+            meh: "Les jours flous existent. On avance doucement.",
+            hard: "Même les maîtres traversent des tempêtes. Tu peux demander du soutien."
+          }
+        }
+      };
+
+      let currentAnimal = null;
+
+      const avatarZone = document.getElementById("wbpup-avatarzone");
+      const choiceZone = document.getElementById("wbpup-choice");
+      const panel = document.getElementById("wbpup-panel");
+      const titleEl = document.getElementById("wbpup-title");
+      const questionEl = document.getElementById("wbpup-question");
+      const motDuJourEl = document.getElementById("wbpup-motdujour");
+      const feedbackEl = document.getElementById("wbpup-feedback");
+      const changeBtn = document.getElementById("wbpup-change");
+
+      function randomFrom(arr) {
+        return arr[Math.floor(Math.random() * arr.length)];
+      }
+
+      function applyAnimal(key) {
+        const cfg = animals[key];
+        if (!cfg) return;
+        currentAnimal = key;
+
+        avatarZone.innerHTML = cfg.avatarHTML;
+        titleEl.textContent = cfg.title;
+        questionEl.textContent = cfg.question;
+        motDuJourEl.textContent = "Message du jour : " + randomFrom(cfg
+          .messagesDuJour);
+        feedbackEl.style.display = "none";
+
+        panel.style.display = "block";
+        choiceZone.style.display = "none";
+
+        try {
+          localStorage.setItem(STORAGE_KEY, key);
+        } catch (e) {}
+      }
+
+      function resetChoice() {
+        currentAnimal = null;
+        feedbackEl.style.display = "none";
+        motDuJourEl.textContent = "";
+        questionEl.textContent = "Salut 👋 Comment te sens-tu aujourd’hui ?";
+        avatarZone.innerHTML =
+          '<div class="wbpup-avatar-breath"><div class="wbpup-avatar-anim"><div class="wbpup-avatar-circle">?</div></div></div>';
+        panel.style.display = "none";
+        choiceZone.style.display = "block";
+        try {
+          localStorage.removeItem(STORAGE_KEY);
+        } catch (e) {}
+      }
+
+      if (changeBtn) {
+        changeBtn.addEventListener("click", resetChoice);
+      }
+
+      document.querySelectorAll(".wbpup-choicebtn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const animal = btn.getAttribute("data-animal");
+          applyAnimal(animal);
+        });
+      });
+
+      document.querySelectorAll("#wbpup-buttons button").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const mood = btn.getAttribute("data-mood");
+          const cfg = animals[currentAnimal];
+          let text = "Merci pour ton check-in 💛";
+          if (cfg && cfg.moods && cfg.moods[mood]) {
+            text = cfg.moods[mood];
+          }
+          feedbackEl.textContent = text;
+          feedbackEl.style.display = "block";
+        });
+      });
+
+      window.addEventListener("load", () => {
+        let saved = null;
+        try {
+          saved = localStorage.getItem(STORAGE_KEY);
+        } catch (e) {}
+        if (saved && animals[saved]) {
+          applyAnimal(saved);
+        } else {
+          resetChoice();
+        }
+      });
+    })();
+  </script>
+</p>
