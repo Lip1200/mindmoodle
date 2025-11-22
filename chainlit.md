@@ -22,11 +22,8 @@ I cannot:
 ## Crisis Resources
 
 If you're in crisis or need immediate help:
-
-- **988 Suicide & Crisis Lifeline**: Call or text 988 (US)
-- **Crisis Text Line**: Text HOME to 741741
 - **Campus Counseling Center**: Contact your university's counseling services
-- **Emergency Services**: Call 911 for immediate danger
+- **Emergency Services**: Call 144 for immediate danger
 
 ## Privacy Notice
 

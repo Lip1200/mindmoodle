@@ -1,0 +1,574 @@
+<!-- 
+Mental Health Support Companion with Animal Avatars - Moodle Integration
+==========================================================================
+
+Widget avec choix de compagnon animal qui personnalise le chatbot.
+-->
+
+<style>
+/* Widget container */
+#mh-widget-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 9999;
+}
+
+/* Avatar animations from index.html */
+.wbpup-avatar-anim {
+    animation: wbpup-intro 900ms ease-out;
+}
+@keyframes wbpup-intro {
+    0%   { transform: translateY(20px) scale(0.7); opacity: 0; }
+    60%  { transform: translateY(-6px) scale(1.05); opacity: 1; }
+    100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+.wbpup-avatar-breath {
+    display: inline-block;
+    animation: wbpup-breath 4s ease-in-out infinite;
+}
+@keyframes wbpup-breath {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50%      { transform: translateY(-2px) scale(1.03); }
+}
+
+.wbpup-eye-blink {
+    position: absolute;
+    height: 0;
+    background: #111827;
+    border-radius: 999px;
+    animation: wbpup-blink 4s infinite;
+    transform-origin: top;
+}
+@keyframes wbpup-blink {
+    0%, 92%, 100% { height: 0; }
+    94%, 96%      { height: 8px; }
+}
+
+/* Animal selection panel */
+#mh-animal-selector {
+    position: fixed;
+    bottom: 90px;
+    right: 20px;
+    width: 340px;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    padding: 20px;
+    display: none;
+    z-index: 9998;
+}
+
+#mh-animal-selector.active {
+    display: block;
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+#mh-animal-selector h3 {
+    margin: 0 0 15px 0;
+    font-size: 16px;
+    color: #111827;
+    text-align: center;
+}
+
+.mh-animal-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.mh-animal-btn {
+    padding: 12px 8px;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    background: #f9fafb;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 12px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.mh-animal-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-color: #667eea;
+}
+
+.mh-animal-btn.selected {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-color: #667eea;
+}
+
+.mh-animal-avatar {
+    transform: scale(0.5);
+    transform-origin: center;
+}
+
+/* Main chat button */
+#mh-chat-button {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+#mh-chat-button:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+
+#mh-chat-button.pulse {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); }
+    50% { box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4), 0 0 0 10px rgba(102, 126, 234, 0.1); }
+}
+
+/* Chat iframe container */
+#mh-chat-iframe-container {
+    position: fixed;
+    bottom: 100px;
+    right: 20px;
+    width: 400px;
+    height: 600px;
+    max-width: calc(100vw - 40px);
+    max-height: calc(100vh - 120px);
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    display: none;
+    z-index: 9997;
+    overflow: hidden;
+}
+
+#mh-chat-iframe-container.active {
+    display: block;
+    animation: slideUp 0.3s ease-out;
+}
+
+#mh-chat-iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    border-radius: 16px;
+}
+
+/* Animal avatar badge on button */
+.mh-avatar-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 30px;
+    height: 30px;
+    background: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    #mh-animal-selector,
+    #mh-chat-iframe-container {
+        bottom: 0;
+        right: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        max-width: 100%;
+        max-height: 100%;
+        border-radius: 0;
+    }
+    
+    #mh-widget-container {
+        bottom: 10px;
+        right: 10px;
+    }
+}
+
+.mh-close-btn {
+    background: #ef4444;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 10px;
+}
+</style>
+
+<!-- Widget HTML -->
+<div id="mh-widget-container">
+    <button id="mh-chat-button" class="pulse" aria-label="Open Mental Health Support Chat">
+        💚
+        <span class="mh-avatar-badge" id="mh-avatar-badge" style="display: none;"></span>
+    </button>
+</div>
+
+<!-- Animal Selection Panel -->
+<div id="mh-animal-selector">
+    <h3>Choisis ton compagnon bien-être :</h3>
+    <div class="mh-animal-grid">
+        <button class="mh-animal-btn" data-animal="dog">
+            <div class="mh-animal-avatar" id="avatar-dog"></div>
+            <span>Chien mignon</span>
+        </button>
+        <button class="mh-animal-btn" data-animal="cat">
+            <div class="mh-animal-avatar" id="avatar-cat"></div>
+            <span>Chat cyberpunk</span>
+        </button>
+        <button class="mh-animal-btn" data-animal="eagle">
+            <div class="mh-animal-avatar" id="avatar-eagle"></div>
+            <span>Aigle fier</span>
+        </button>
+        <button class="mh-animal-btn" data-animal="raccoon">
+            <div class="mh-animal-avatar" id="avatar-raccoon"></div>
+            <span>Raton fou</span>
+        </button>
+        <button class="mh-animal-btn" data-animal="panda">
+            <div class="mh-animal-avatar" id="avatar-panda"></div>
+            <span>Panda sensei</span>
+        </button>
+        <button class="mh-animal-btn" data-animal="dragon">
+            <div class="mh-animal-avatar" id="avatar-dragon"></div>
+            <span>Dragon impérial</span>
+        </button>
+    </div>
+    <button class="mh-close-btn" id="mh-close-selector">Annuler</button>
+</div>
+
+<!-- Chat Iframe Container -->
+<div id="mh-chat-iframe-container">
+    <iframe 
+        id="mh-chat-iframe"
+        title="Mental Health Support Chat"
+        allow="microphone; camera"
+        loading="lazy">
+    </iframe>
+</div>
+
+<script>
+(function() {
+    'use strict';
+    
+    // CONFIGURATION
+    const CHAINLIT_SERVER_URL = 'http://localhost:8000'; // Changez en production
+    const STORAGE_KEY = 'mh_companion_animal';
+    
+    // Animal avatar HTML (from index.html)
+    const ANIMAL_AVATARS = {
+        dog: `<div class="wbpup-avatar-breath">
+          <div class="wbpup-avatar-anim">
+            <div style="position:relative;width:80px;height:80px;margin:auto;">
+              <div style="position:absolute;width:26px;height:30px;background:#b56539;border-radius:50% 50% 40% 40%;top:0;left:4px;"></div>
+              <div style="position:absolute;width:26px;height:30px;background:#b56539;border-radius:50% 50% 40% 40%;top:0;right:4px;"></div>
+              <div style="position:absolute;width:70px;height:55px;background:#f5e9dd;border-radius:50px;top:15px;left:5px;z-index:5;">
+                <div style="position:absolute;width:28px;height:28px;background:#e0c5aa;border-radius:50%;left:6px;top:10px;"></div>
+                <div style="position:absolute;width:10px;height:10px;background:#111;border-radius:50%;top:20px;left:22px;"></div>
+                <div style="position:absolute;width:10px;height:10px;background:#111;border-radius:50%;top:20px;right:18px;"></div>
+                <div class="wbpup-eye-blink" style="width:10px;left:22px;top:20px;"></div>
+                <div class="wbpup-eye-blink" style="width:10px;right:18px;top:20px;"></div>
+                <div style="position:absolute;width:34px;height:24px;background:#fff;border-radius:50px;bottom:0;left:50%;transform:translateX(-50%);">
+                  <div style="position:absolute;width:14px;height:10px;background:#111;border-radius:70%;top:2px;left:50%;transform:translateX(-50%);"></div>
+                </div>
+              </div>
+              <div style="position:absolute;width:60px;height:36px;background:#f5e9dd;border-radius:30px;bottom:0;left:10px;z-index:1;">
+                <div style="position:absolute;width:14px;height:14px;background:#f5e9dd;border-radius:50%;bottom:-5px;left:10px;"></div>
+                <div style="position:absolute;width:14px;height:14px;background:#f5e9dd;border-radius:50%;bottom:-5px;right:10px;"></div>
+              </div>
+            </div>
+          </div>
+        </div>`,
+        
+        cat: `<div class="wbpup-avatar-breath">
+          <div class="wbpup-avatar-anim">
+            <div style="position:relative;width:80px;height:80px;margin:auto;">
+              <div style="position:absolute;width:0;height:0;border-left:10px solid transparent;border-right:10px solid transparent;border-bottom:18px solid #4b5563;top:4px;left:16px;"></div>
+              <div style="position:absolute;width:0;height:0;border-left:10px solid transparent;border-right:10px solid transparent;border-bottom:18px solid #4b5563;top:4px;right:16px;"></div>
+              <div style="position:absolute;width:64px;height:50px;background:#111827;border-radius:18px;top:16px;left:8px;box-shadow:0 0 0 2px #22c1c3;z-index:5;">
+                <div style="position:absolute;left:6px;right:6px;top:20px;height:12px;background:linear-gradient(90deg,#22c1c3,#a855f7);border-radius:8px;"></div>
+                <div style="position:absolute;width:8px;height:8px;background:#ecfeff;border-radius:2px;top:22px;left:12px;"></div>
+                <div style="position:absolute;width:8px;height:8px;background:#ecfeff;border-radius:2px;top:22px;right:12px;"></div>
+                <div class="wbpup-eye-blink" style="width:8px;left:12px;top:22px;"></div>
+                <div class="wbpup-eye-blink" style="width:8px;right:12px;top:22px;"></div>
+                <div style="position:absolute;width:16px;height:10px;background:#f9fafb;border-radius:10px;bottom:4px;left:50%;transform:translateX(-50%);"></div>
+              </div>
+              <div style="position:absolute;width:56px;height:30px;background:#111827;border-radius:18px;bottom:6px;left:12px;z-index:1;">
+                <div style="position:absolute;left:10px;bottom:-4px;width:10px;height:12px;background:#111827;border-radius:0 0 8px 8px;"></div>
+                <div style="position:absolute;right:10px;bottom:-4px;width:10px;height:12px;background:#111827;border-radius:0 0 8px 8px;"></div>
+                <div style="position:absolute;right:-10px;top:6px;width:22px;height:8px;background:linear-gradient(90deg,#22c1c3,#a855f7);border-radius:999px;"></div>
+              </div>
+            </div>
+          </div>
+        </div>`,
+        
+        eagle: `<div class="wbpup-avatar-breath">
+          <div class="wbpup-avatar-anim">
+            <div style="position:relative;width:80px;height:80px;margin:auto;">
+              <div style="position:absolute;width:54px;height:40px;background:#f9fafb;border-radius:40px;top:18px;left:13px;box-shadow:0 0 0 2px rgba(0,0,0,0.08);z-index:5;">
+                <div style="position:absolute;width:0;height:0;border-top:8px solid transparent;border-bottom:8px solid transparent;border-left:14px solid #fbbf24;right:-10px;top:18px;"></div>
+                <div style="position:absolute;width:8px;height:8px;background:#111;border-radius:50%;top:14px;left:14px;"></div>
+                <div style="position:absolute;width:8px;height:8px;background:#111;border-radius:50%;top:14px;right:14px;"></div>
+                <div class="wbpup-eye-blink" style="width:8px;left:14px;top:14px;"></div>
+                <div class="wbpup-eye-blink" style="width:8px;right:14px;top:14px;"></div>
+              </div>
+              <div style="position:absolute;width:52px;height:34px;background:#78350f;border-radius:26px;bottom:8px;left:14px;z-index:1;">
+                <div style="position:absolute;width:16px;height:14px;background:#92400e;border-radius:50%;bottom:-4px;left:10px;"></div>
+                <div style="position:absolute;width:16px;height:14px;background:#92400e;border-radius:50%;bottom:-4px;right:10px;"></div>
+              </div>
+            </div>
+          </div>
+        </div>`,
+        
+        raccoon: `<div class="wbpup-avatar-breath">
+          <div class="wbpup-avatar-anim">
+            <div style="position:relative;width:80px;height:80px;margin:auto;">
+              <div style="position:absolute;width:64px;height:46px;background:#6b7280;border-radius:18px;top:18px;left:8px;z-index:5;">
+                <div style="position:absolute;left:4px;right:4px;top:16px;height:16px;background:#111827;border-radius:12px;"></div>
+                <div style="position:absolute;width:10px;height:10px;background:#f9fafb;border-radius:50%;top:18px;left:14px;"></div>
+                <div style="position:absolute;width:10px;height:10px;background:#f9fafb;border-radius:50%;top:18px;right:14px;"></div>
+                <div class="wbpup-eye-blink" style="width:10px;left:14px;top:18px;"></div>
+                <div class="wbpup-eye-blink" style="width:10px;right:14px;top:18px;"></div>
+                <div style="position:absolute;width:10px;height:8px;background:#111827;border-radius:70%;bottom:4px;left:50%;transform:translateX(-50%);"></div>
+              </div>
+              <div style="position:absolute;width:20px;height:20px;background:#4b5563;border-radius:6px 6px 0 0;top:6px;left:8px;z-index:6;"></div>
+              <div style="position:absolute;width:20px;height:20px;background:#4b5563;border-radius:6px 6px 0 0;top:6px;right:8px;z-index:6;"></div>
+              <div style="position:absolute;width:58px;height:32px;background:#6b7280;border-radius:22px;bottom:8px;left:11px;z-index:1;">
+                <div style="position:absolute;width:14px;height:14px;background:#6b7280;border-radius:50%;bottom:-4px;left:10px;"></div>
+                <div style="position:absolute;width:14px;height:14px;background:#6b7280;border-radius:50%;bottom:-4px;right:10px;"></div>
+                <div style="position:absolute;width:26px;height:10px;right:-14px;top:8px;background:repeating-linear-gradient(90deg,#4b5563 0 6px,#9ca3af 6px 12px);border-radius:999px;"></div>
+              </div>
+            </div>
+          </div>
+        </div>`,
+        
+        panda: `<div class="wbpup-avatar-breath">
+          <div class="wbpup-avatar-anim">
+            <div style="position:relative;width:80px;height:80px;margin:auto;">
+              <div style="position:absolute;width:64px;height:50px;background:#f9fafb;border-radius:26px;top:16px;left:8px;box-shadow:0 0 0 2px rgba(0,0,0,0.05);z-index:5;">
+                <div style="position:absolute;width:14px;height:16px;background:#111827;border-radius:50%;top:18px;left:13px;"></div>
+                <div style="position:absolute;width:14px;height:16px;background:#111827;border-radius:50%;top:18px;right:13px;"></div>
+                <div style="position:absolute;width:6px;height:6px;background:#f9fafb;border-radius:50%;top:22px;left:18px;"></div>
+                <div style="position:absolute;width:6px;height:6px;background:#f9fafb;border-radius:50%;top:22px;right:18px;"></div>
+                <div class="wbpup-eye-blink" style="width:6px;left:18px;top:22px;"></div>
+                <div class="wbpup-eye-blink" style="width:6px;right:18px;top:22px;"></div>
+                <div style="position:absolute;width:10px;height:8px;background:#111827;border-radius:70%;bottom:6px;left:50%;transform:translateX(-50%);"></div>
+              </div>
+              <div style="position:absolute;width:22px;height:22px;background:#111827;border-radius:50%;top:4px;left:10px;z-index:6;"></div>
+              <div style="position:absolute;width:22px;height:22px;background:#111827;border-radius:50%;top:4px;right:10px;z-index:6;"></div>
+              <div style="position:absolute;width:56px;height:34px;background:#111827;border-radius:26px;bottom:8px;left:12px;z-index:1;">
+                <div style="position:absolute;width:12px;height:8px;background:#7f1d1d;top:4px;left:50%;transform:translateX(-50%);border-radius:4px;"></div>
+                <div style="position:absolute;width:12px;height:18px;background:#b91c1c;top:12px;left:50%;transform:translateX(-50%);border-radius:2px 2px 6px 6px;"></div>
+                <div style="position:absolute;width:14px;height:14px;background:#111827;border-radius:50%;bottom:-4px;left:10px;"></div>
+                <div style="position:absolute;width:14px;height:14px;background:#111827;border-radius:50%;bottom:-4px;right:10px;"></div>
+              </div>
+            </div>
+          </div>
+        </div>`,
+        
+        dragon: `<div class="wbpup-avatar-breath">
+          <div class="wbpup-avatar-anim">
+            <div style="position:relative;width:80px;height:80px;margin:auto;">
+              <div style="position:absolute;width:18px;height:4px;background:#fbbf24;border-radius:999px;top:40px;left:10px;"></div>
+              <div style="position:absolute;width:18px;height:4px;background:#fbbf24;border-radius:999px;top:40px;right:10px;"></div>
+              <div style="position:absolute;width:14px;height:18px;background:#facc15;border-radius:50% 50% 0 0;top:4px;left:16px;transform:rotate(-18deg);"></div>
+              <div style="position:absolute;width:14px;height:18px;background:#facc15;border-radius:50% 50% 0 0;top:4px;right:16px;transform:rotate(18deg);"></div>
+              <div style="position:absolute;width:66px;height:46px;background:#7f1d1d;border-radius:20px;top:18px;left:7px;box-shadow:0 0 0 2px rgba(0,0,0,0.25);z-index:5;">
+                <div style="position:absolute;left:14px;right:14px;top:6px;height:8px;background:linear-gradient(90deg,#f97316,#facc15);border-radius:999px;"></div>
+                <div style="position:absolute;width:12px;height:12px;background:#f9fafb;border-radius:50%;top:18px;left:14px;"></div>
+                <div style="position:absolute;width:12px;height:12px;background:#f9fafb;border-radius:50%;top:18px;right:14px;"></div>
+                <div style="position:absolute;width:7px;height:7px;background:#111;border-radius:50%;top:21px;left:17px;"></div>
+                <div style="position:absolute;width:7px;height:7px;background:#111;border-radius:50%;top:21px;right:17px;"></div>
+                <div style="position:absolute;width:4px;height:4px;background:#f97316;border-radius:50%;top:22px;left:19px;"></div>
+                <div style="position:absolute;width:4px;height:4px;background:#f97316;border-radius:50%;top:22px;right:19px;"></div>
+                <div class="wbpup-eye-blink" style="width:12px;left:14px;top:18px;"></div>
+                <div class="wbpup-eye-blink" style="width:12px;right:14px;top:18px;"></div>
+                <div style="position:absolute;width:20px;height:10px;background:#450a0a;border-radius:999px;bottom:8px;left:50%;transform:translateX(-50%);"></div>
+                <div style="position:absolute;width:5px;height:5px;background:#111;border-radius:50%;bottom:9px;left:26px;"></div>
+                <div style="position:absolute;width:5px;height:5px;background:#111;border-radius:50%;bottom:9px;right:26px;"></div>
+              </div>
+              <div style="position:absolute;width:40px;height:8px;background:#e5e7eb;border-radius:999px;top:54px;left:20px;box-shadow:0 0 0 2px rgba(148,163,184,0.6);z-index:2;"></div>
+              <div style="position:absolute;width:62px;height:32px;background:linear-gradient(90deg,#7f1d1d,#f97316);border-radius:999px;bottom:10px;left:9px;z-index:1;">
+                <div style="position:absolute;width:40px;height:16px;left:11px;top:8px;background:repeating-linear-gradient(90deg,rgba(251,191,36,0.85) 0 8px,rgba(248,250,252,0.0) 8px 12px);border-radius:999px;"></div>
+                <div style="position:absolute;width:10px;height:12px;background:#450a0a;border-radius:0 0 8px 8px;bottom:-4px;left:10px;"></div>
+                <div style="position:absolute;width:10px;height:12px;background:#450a0a;border-radius:0 0 8px 8px;bottom:-4px;right:10px;"></div>
+                <div style="position:absolute;width:18px;height:8px;right:-10px;top:10px;background:#7f1d1d;border-radius:999px;"></div>
+                <div style="position:absolute;width:0;height:0;right:-14px;top:11px;border-top:6px solid transparent;border-bottom:6px solid transparent;border-left:10px solid #7f1d1d;"></div>
+              </div>
+            </div>
+          </div>
+        </div>`
+    };
+    
+    // Animal emojis for badge
+    const ANIMAL_EMOJIS = {
+        dog: '🐶',
+        cat: '😼',
+        eagle: '🦅',
+        raccoon: '🦝',
+        panda: '🐼',
+        dragon: '🐲'
+    };
+    
+    // DOM elements
+    const chatButton = document.getElementById('mh-chat-button');
+    const avatarBadge = document.getElementById('mh-avatar-badge');
+    const animalSelector = document.getElementById('mh-animal-selector');
+    const iframeContainer = document.getElementById('mh-chat-iframe-container');
+    const iframe = document.getElementById('mh-chat-iframe');
+    const closeSelector = document.getElementById('mh-close-selector');
+    
+    let selectedAnimal = null;
+    let isChatOpen = false;
+    let isSelectorOpen = false;
+    
+    // Load saved animal
+    function loadSavedAnimal() {
+        try {
+            selectedAnimal = localStorage.getItem(STORAGE_KEY);
+            if (selectedAnimal && ANIMAL_EMOJIS[selectedAnimal]) {
+                updateButtonWithAnimal(selectedAnimal);
+            }
+        } catch (e) {
+            console.log('Could not load saved animal');
+        }
+    }
+    
+    // Update button with selected animal
+    function updateButtonWithAnimal(animal) {
+        selectedAnimal = animal;
+        avatarBadge.textContent = ANIMAL_EMOJIS[animal];
+        avatarBadge.style.display = 'flex';
+        chatButton.classList.remove('pulse');
+        
+        // Save selection
+        try {
+            localStorage.setItem(STORAGE_KEY, animal);
+        } catch (e) {}
+        
+        // Update visual selection in selector
+        document.querySelectorAll('.mh-animal-btn').forEach(btn => {
+            btn.classList.toggle('selected', btn.dataset.animal === animal);
+        });
+    }
+    
+    // Open chat with animal context
+    function openChat() {
+        if (!selectedAnimal) {
+            // Show animal selector first
+            showAnimalSelector();
+            return;
+        }
+        
+        // Build iframe URL with animal parameter
+        const url = new URL(CHAINLIT_SERVER_URL);
+        url.searchParams.set('companion', selectedAnimal);
+        iframe.src = url.toString();
+        
+        iframeContainer.classList.add('active');
+        isChatOpen = true;
+        chatButton.textContent = '✕';
+        chatButton.style.fontSize = '24px';
+        avatarBadge.style.display = 'none';
+    }
+    
+    // Close chat
+    function closeChat() {
+        iframeContainer.classList.remove('active');
+        isChatOpen = false;
+        chatButton.textContent = '💚';
+        chatButton.style.fontSize = '32px';
+        if (selectedAnimal) {
+            avatarBadge.style.display = 'flex';
+        }
+    }
+    
+    // Show animal selector
+    function showAnimalSelector() {
+        animalSelector.classList.add('active');
+        isSelectorOpen = true;
+    }
+    
+    // Hide animal selector
+    function hideAnimalSelector() {
+        animalSelector.classList.remove('active');
+        isSelectorOpen = false;
+    }
+    
+    // Toggle chat/selector
+    chatButton.addEventListener('click', () => {
+        if (isChatOpen) {
+            closeChat();
+        } else {
+            openChat();
+        }
+    });
+    
+    // Animal selection
+    document.querySelectorAll('.mh-animal-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const animal = btn.dataset.animal;
+            updateButtonWithAnimal(animal);
+            hideAnimalSelector();
+            // Auto-open chat after selection
+            setTimeout(() => openChat(), 300);
+        });
+    });
+    
+    // Close selector button
+    closeSelector.addEventListener('click', hideAnimalSelector);
+    
+    // Inject animal avatars into buttons
+    function initializeAvatars() {
+        Object.keys(ANIMAL_AVATARS).forEach(animal => {
+            const avatarContainer = document.getElementById(`avatar-${animal}`);
+            if (avatarContainer) {
+                avatarContainer.innerHTML = ANIMAL_AVATARS[animal];
+            }
+        });
+    }
+    
+    // Initialize
+    initializeAvatars();
+    loadSavedAnimal();
+    
+    // Remove pulse after 10 seconds
+    setTimeout(() => {
+        chatButton.classList.remove('pulse');
+    }, 10000);
+    
+})();
+</script>
