@@ -1,0 +1,80 @@
+name: Deploy to DigitalOcean
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy to Droplet
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Add Droplet to known hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ secrets.DROPLET_IP }} >> ~/.ssh/known_hosts
+
+      - name: Deploy to Droplet
+        env:
+          CHAINLIT_AUTH_SECRET: ${{ secrets.CHAINLIT_AUTH_SECRET }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          CHAINLIT_URL: ${{ secrets.CHAINLIT_URL }}
+        run: |
+          DEPLOY_DIR="/opt/mindmoodle"
+          
+          ssh ${{ secrets.DROPLET_USER }}@${{ secrets.DROPLET_IP }} "mkdir -p $DEPLOY_DIR"
+          
+          rsync -avz --delete \
+            --exclude '.git' \
+            --exclude '.github' \
+            --exclude 'venv' \
+            --exclude '__pycache__' \
+            --exclude '.env' \
+            --exclude '*.pyc' \
+            --exclude 'node_modules' \
+            ./ ${{ secrets.DROPLET_USER }}@${{ secrets.DROPLET_IP }}:$DEPLOY_DIR/
+          
+          ssh ${{ secrets.DROPLET_USER }}@${{ secrets.DROPLET_IP }} bash << 'EOF'
+            cd /opt/mindmoodle
+            
+            echo "CHAINLIT_AUTH_SECRET=$CHAINLIT_AUTH_SECRET" > .env
+            echo "CHAINLIT_URL=$CHAINLIT_URL" >> .env
+            echo "OPENAI_API_KEY=$OPENAI_API_KEY" >> .env
+            echo "ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY" >> .env
+            echo "COMPANION=dog" >> .env
+            echo "CHAINLIT_TELEMETRY=false" >> .env
+            
+            docker-compose down
+            docker-compose build --no-cache
+            docker-compose up -d
+            docker image prune -f
+            
+            echo "Deployment complete!"
+            docker-compose ps
+          EOF
+
+      - name: Health Check
+        run: |
+          sleep 10
+          curl -f ${{ secrets.CHAINLIT_URL }}/healthz || curl -f http://${{ secrets.DROPLET_IP }}:8000/ || echo "Warning: Health check failed"
+
+      - name: Notification
+        if: always()
+        run: |
+          if [ ${{ job.status }} == 'success' ]; then
+            echo "✅ Deployment successful!"
+          else
+            echo "❌ Deployment failed!"
+          fi

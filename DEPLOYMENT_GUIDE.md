@@ -67,7 +67,46 @@ ufw status
 
 ## 📦 3. Déployer l'Application
 
-### Méthode A : Depuis Git (Recommandé)
+### Méthode A : Déploiement Automatique avec GitHub Actions (Recommandé ⭐)
+
+**Avantages :**
+- Déploiement automatique à chaque push
+- Pas besoin de connexion manuelle au serveur
+- Historique des déploiements
+- Rollback facile
+
+**Configuration :**
+
+1. **Configurer les secrets GitHub** (voir `.github/SETUP_SECRETS.md`) :
+   - `SSH_PRIVATE_KEY` - Clé SSH pour accéder au droplet
+   - `DROPLET_IP` - IP du droplet
+   - `DROPLET_USER` - Utilisateur SSH (ex: root ou deployer)
+   - `CHAINLIT_AUTH_SECRET` - Secret généré avec `openssl rand -base64 32`
+   - `CHAINLIT_URL` - URL publique (ex: https://chatbot.unige.ch)
+   - `OPENAI_API_KEY` - Clé API OpenAI
+
+2. **Préparer le droplet** (une seule fois) :
+```bash
+# Sur le droplet
+mkdir -p /opt/mindmoodle
+```
+
+3. **Push vers GitHub** :
+```bash
+git add .
+git commit -m "Deploy to production"
+git push origin main
+```
+
+4. **Suivre le déploiement** :
+   - Allez sur GitHub > Actions
+   - Suivez le workflow en temps réel
+
+**Documentation complète :** Voir `.github/SETUP_SECRETS.md`
+
+---
+
+### Méthode B : Depuis Git (Manuel)
 
 ```bash
 # Installer Git si nécessaire
@@ -83,7 +122,7 @@ cp .env.example .env
 nano .env
 ```
 
-### Méthode B : Upload manuel
+### Méthode C : Upload manuel
 
 ```bash
 # Sur votre machine locale
