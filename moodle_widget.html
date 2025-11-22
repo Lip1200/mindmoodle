@@ -180,6 +180,28 @@ FEATURES:
     // CONFIGURATION - Replace with your actual Chainlit server URL
     const CHAINLIT_SERVER_URL = 'YOUR_CHAINLIT_SERVER_URL';  // e.g., 'https://your-server.com'
     
+    // Validate URL for security
+    function validateServerURL(url) {
+        if (!url || url === 'YOUR_CHAINLIT_SERVER_URL') {
+            return false;
+        }
+        
+        // In production, enforce HTTPS for security
+        // Comment out the next 3 lines for local development with HTTP
+        if (!url.startsWith('https://')) {
+            console.error('Mental Health Widget: HTTPS required for production. Use https:// URL.');
+            return false;
+        }
+        
+        try {
+            new URL(url);  // Validate URL format
+            return true;
+        } catch (e) {
+            console.error('Mental Health Widget: Invalid URL format');
+            return false;
+        }
+    }
+    
     // Crisis keywords for client-side detection
     const CRISIS_KEYWORDS = [
         'suicide', 'suicidal', 'kill myself', 'end my life', 'want to die',
@@ -196,8 +218,9 @@ FEATURES:
     
     // Initialize the widget
     function init() {
-        if (!CHAINLIT_SERVER_URL || CHAINLIT_SERVER_URL === 'YOUR_CHAINLIT_SERVER_URL') {
-            console.error('Mental Health Widget: Please configure CHAINLIT_SERVER_URL');
+        if (!validateServerURL(CHAINLIT_SERVER_URL)) {
+            console.error('Mental Health Widget: Please configure a valid HTTPS URL in CHAINLIT_SERVER_URL');
+            chatButton.style.display = 'none';  // Hide widget if misconfigured
             return;
         }
         

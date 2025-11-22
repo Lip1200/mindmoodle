@@ -36,8 +36,9 @@ pip install -r requirements.txt
 
 This will install:
 - Chainlit (for the chat interface)
-- mellea (for response validation and safety filtering)
-- litellm (dependency for mellea)
+- pytest (for running tests)
+
+Note: We use a safety filtering approach inspired by the mellea library's validation patterns, but don't require mellea as a direct dependency. See MELLEA.md for details.
 
 ### 3. Configure the Application (Optional)
 

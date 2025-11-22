@@ -5,7 +5,8 @@ This application provides a safe, supportive chatbot for mental health support
 embedded in Moodle via a copilot widget. It includes crisis keyword detection
 and provides non-medical, supportive responses.
 
-Uses safety filters inspired by mellea library to filter hallucinations and medical advice.
+Uses safety filters inspired by mellea library patterns to filter hallucinations 
+and medical advice.
 """
 
 import chainlit as cl
@@ -166,8 +167,10 @@ def validate_response_safety(response_text: str) -> Tuple[bool, List[str]]:
             if not is_satisfied:
                 violations.append(requirement.description)
         except Exception as e:
-            # If check fails, consider it a violation
-            violations.append(f"Safety check error: {str(e)}")
+            # If check fails, consider it a violation and log for monitoring
+            error_msg = f"Safety check error in '{requirement.description}': {str(e)}"
+            print(f"⚠️ {error_msg}")  # Log for monitoring
+            violations.append(error_msg)
     
     is_safe = len(violations) == 0
     return is_safe, violations
@@ -185,9 +188,9 @@ async def generate_response(message: str, history: List[Dict]) -> str:
         history: Conversation history
         
     Returns:
-        Generated response text, validated by mellea safety requirements
+        Generated response text, validated by safety requirements
     """
-    # Check for crisis keywords first
+    # Check for crisis keywords in user message first
     if detect_crisis_keywords(message):
         return CRISIS_RESOURCES
     
@@ -213,7 +216,14 @@ async def generate_response(message: str, history: List[Dict]) -> str:
     if not response_text:
         response_text = "Thank you for sharing that with me. I'm here to listen and support you. Can you tell me more about what's on your mind? Remember, if you need professional support, your campus counseling center is a great resource."
     
-    # Validate response using mellea safety requirements
+    # Check generated response for crisis indicators as well
+    # (User might express crisis thoughts in response to assistant questions)
+    if detect_crisis_keywords(response_text):
+        # This should rarely happen with good responses, but check anyway
+        print("⚠️ Warning: Generated response contains crisis keywords - replacing with resources")
+        return CRISIS_RESOURCES
+    
+    # Validate response using safety requirements
     is_safe, violations = validate_response_safety(response_text)
     
     if not is_safe:
