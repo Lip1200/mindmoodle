@@ -25,6 +25,11 @@ jobs:
         run: |
           mkdir -p ~/.ssh
           ssh-keyscan -H ${{ secrets.DROPLET_IP }} >> ~/.ssh/known_hosts
+      
+      - name: Test SSH Connection
+        run: |
+          echo "Testing SSH connection..."
+          ssh -o StrictHostKeyChecking=no ${{ secrets.DROPLET_USER }}@${{ secrets.DROPLET_IP }} "echo 'SSH connection successful!' && whoami && pwd"
 
       - name: Deploy to Droplet
         env:

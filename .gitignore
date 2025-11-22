@@ -34,7 +34,7 @@ ENV/
 *~
 
 # Chainlit
-.chainlit/
+# .chainlit/
 *.db
 .files/
 

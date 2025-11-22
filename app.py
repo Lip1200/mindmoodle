@@ -16,12 +16,20 @@ from typing import List, Dict, Tuple
 from dataclasses import dataclass, asdict
 
 # Mellea library imports for structured validation
-from mellea import generative
 from mellea.stdlib.requirement import Requirement
+from dotenv import load_dotenv, find_dotenv
+
+# OpenAI integration
+from openai import OpenAI
 
 # Configure Chainlit for Copilot mode
 import os
+load_dotenv(find_dotenv())
+
 os.environ["CHAINLIT_AUTH_SECRET"] = os.getenv("CHAINLIT_AUTH_SECRET", "your-secret-key-change-in-production")
+
+# Initialize OpenAI client
+openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # Crisis keywords that trigger special handling (English + French)
 CRISIS_KEYWORDS = [
@@ -385,11 +393,9 @@ def log_safety_audit_simple(violations: List[str], response_text: str) -> None:
     print("="*60 + "\n")
 
 
-@generative
 def generate_safe_llm_response(user_message: str, conversation_history: List[Dict], companion: str = "dog") -> str:
     """
-    Generate a safe response using mellea's @generative decorator.
-    This function would integrate with your LLM in production.
+    Generate a safe response using OpenAI with personality adaptation.
     
     Args:
         user_message: The user's current message
@@ -400,6 +406,34 @@ def generate_safe_llm_response(user_message: str, conversation_history: List[Dic
         Safe, validated response with personality adaptation
     """
     persona = ANIMAL_PERSONAS.get(companion, ANIMAL_PERSONAS["dog"])
+    system_prompt = get_system_prompt(companion)
+    
+    # Build messages for OpenAI
+    messages = [{"role": "system", "content": system_prompt}]
+    
+    # Add conversation history (last 10 messages to manage token usage)
+    for msg in conversation_history[-10:]:
+        messages.append(msg)
+    
+    # Add current user message
+    messages.append({"role": "user", "content": user_message})
+    
+    try:
+        # Call OpenAI API
+        response = openai_client.chat.completions.create(
+            model="gpt-4o-mini",  # Using GPT-4o-mini for cost efficiency
+            messages=messages,
+            temperature=0.7,
+            max_tokens=500,
+            top_p=0.9,
+        )
+        
+        return response.choices[0].message.content
+        
+    except Exception as e:
+        print(f"⚠️ OpenAI API Error: {e}")
+        # Fallback to pre-programmed response if API fails
+        return fallback_response(user_message, persona)
     
     # In production, replace this with actual LLM API call using get_system_prompt(companion)
     # For now, use placeholder responses adapted to each personality
@@ -469,6 +503,30 @@ def generate_safe_llm_response(user_message: str, conversation_history: List[Dic
     return default_by_animal.get(companion, default_by_animal["dog"])
 
 
+def fallback_response(user_message: str, persona: Dict) -> str:
+    """
+    Fallback response when OpenAI API is unavailable.
+    Uses simple keyword matching.
+    """
+    message_lower = user_message.lower()
+    
+    # Simple keyword-based responses
+    if any(word in message_lower for word in ["stress", "stressé", "débordé", "overwhelm"]):
+        return f"{persona['phrases'][0]} Je sens que tu es stressé·e. Prends une pause, respire profondément. {persona['phrases'][1]}. Qu'est-ce qui te stresse le plus ?"
+    
+    if any(word in message_lower for word in ["anxiet", "anxieux", "inquiet", "worry"]):
+        return f"L'anxiété peut être difficile. {persona['phrases'][0]} Essaie la technique 5-4-3-2-1 pour t'ancrer. Je suis là pour écouter."
+    
+    if any(word in message_lower for word in ["triste", "sad", "déprim", "down"]):
+        return f"{persona['phrases'][0]} Je suis désolé·e que tu te sentes comme ça. Tes émotions sont valides. {persona['phrases'][1]}. Veux-tu en parler ?"
+    
+    if any(word in message_lower for word in ["seul", "lonely", "isolé", "alone"]):
+        return f"La solitude est dure. {persona['phrases'][0]} As-tu pensé aux services de soutien du campus ? {persona['phrases'][1]}."
+    
+    # Default response
+    return f"Merci de partager ça avec moi. {persona['phrases'][0]} Je suis là pour écouter. {persona['phrases'][1]}. Peux-tu m'en dire plus ?"
+
+
 def validate_response_safety(response_text: str) -> Tuple[bool, List[str]]:
     """
     Validate response using mellea library's Requirement validation.
@@ -518,7 +576,7 @@ async def generate_response(message: str, history: List[Dict], companion: str = 
         return CRISIS_RESOURCES
     
     # Generate response using mellea's @generative decorator with personality
-    response_text = generate_safe_llm_response(message, history, companion)
+    response_text = generate_safe_llm_response(user_message=message, conversation_history=history, companion=companion)
     
     # Check generated response for crisis indicators
     if detect_crisis_keywords(response_text):
