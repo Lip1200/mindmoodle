@@ -1,6 +1,8 @@
 # MindMoodle - Mental Health Support Companion 💚
 
-A Chainlit Copilot chat widget for mental health support, designed to be embedded in Moodle HTML blocks.
+![Hackathon](https://img.shields.io/badge/Hackathon-2025-blueviolet?style=flat-square)
+
+> Built during a hackathon — a Chainlit Copilot chat widget for mental health support, designed to be embedded in Moodle HTML blocks.
 
 ## Features
 
